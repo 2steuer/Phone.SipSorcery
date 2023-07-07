@@ -3,6 +3,7 @@
     public enum CallState
     {
         Unknown,
+        Trying,
         Ringing,
         Established,
         Failed,

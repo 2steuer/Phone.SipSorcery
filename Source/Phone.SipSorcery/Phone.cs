@@ -77,8 +77,25 @@ namespace Phone.SipSorcery
 
         private void IncomingCall(SIPUserAgent uas, SIPRequest request)
         {
-            
-            
+            _incomingUa.OnIncomingCall -= IncomingCall;
+            _incomingUa = CreateIncomingUserAgent();
+
+            var server = uas.AcceptCall(request);
+            var ic = new IncomingCall(uas, server);
+            ic.OnStateChanged += Ic_OnStateChanged;
+
+            _activeCalls.Add(ic);
+        }
+
+        private void Ic_OnStateChanged(Call arg1, CallState arg2)
+        {
+            switch (arg2)
+            {
+                case CallState.Failed:
+                case CallState.Ended:
+                    _activeCalls.Remove(arg1);
+                    break;
+            }
         }
 
         public void Start()

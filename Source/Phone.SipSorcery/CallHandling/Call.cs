@@ -99,7 +99,7 @@ namespace Phone.SipSorcery.CallHandling
         public CallState State
         {
             get => _state;
-            protected set  {
+            protected set {
                 _state = value;
                 OnStateChanged?.Invoke(this, value);
             }
@@ -111,13 +111,24 @@ namespace Phone.SipSorcery.CallHandling
         {
             _ua = ua;
             Direction = direction;
+
+            _ua.OnCallHungup += _ua_OnCallHungup;
         }
 
+        private void _ua_OnCallHungup(SIPSorcery.SIP.SIPDialogue obj)
+        {
+            State = CallState.Ended;
+        }
 
         public void Hangup()
         {
             _ua.Hangup();
             State = CallState.Ended;
+        }
+        
+        public virtual void Dispose()
+        {
+            _ua.Dispose();
         }
     }
 
