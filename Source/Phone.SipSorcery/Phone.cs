@@ -1,5 +1,8 @@
 ﻿using System.Net.Sockets;
+using AudioBrix.SipSorcery;
 using Phone.SipSorcery.CallHandling;
+using SIPSorcery.Media;
+using SIPSorcery.Net;
 using SIPSorcery.SIP;
 using SIPSorcery.SIP.App;
 
@@ -7,6 +10,7 @@ namespace Phone.SipSorcery
 {
     public class Phone
     {
+        public event Action<object, IncomingCall>? OnIncomingCall;
         public event Action<object, RegistrationState>? OnRegistrationStateChanged; 
 
         private SIPTransport _transport;
@@ -85,6 +89,8 @@ namespace Phone.SipSorcery
             ic.OnStateChanged += Ic_OnStateChanged;
 
             _activeCalls.Add(ic);
+
+            OnIncomingCall?.Invoke(this, ic);
         }
 
         private void Ic_OnStateChanged(Call arg1, CallState arg2)
@@ -96,6 +102,51 @@ namespace Phone.SipSorcery
                     _activeCalls.Remove(arg1);
                     break;
             }
+        }
+
+        public async Task<Call> Call(string destination)
+        {
+            SIPUserAgent callUA = new SIPUserAgent(_transport,
+                _regUa?.OutboundProxy ?? SIPEndPoint.ParseSIPEndPoint(_cfg.Server));
+
+            SIPURI dstUri;
+
+            if (!SIPURI.TryParse(destination, out dstUri))
+            {
+                dstUri = new SIPURI(destination, _cfg.Server, string.Empty);
+            }
+
+            string from = SIPConstants.SIP_DEFAULT_FROMURI;
+
+            if (!string.IsNullOrEmpty(_cfg.Username))
+            {
+                from = new SIPURI(_cfg.Username, _cfg.Server, string.Empty).ToParameterlessString();
+            }
+
+            var cd = new SIPCallDescriptor(
+                _cfg.Username,
+                _cfg.Password,
+                dstUri.ToString(),
+                from,
+                dstUri.CanonicalAddress,
+                null, null, null,
+                SIPCallDirection.Out,
+                SDP.SDP_MIME_CONTENTTYPE,
+                null,
+                null
+            );
+
+            var audioEndpoint = new AudioBrixEndpoint(new AudioEncoder());
+            audioEndpoint.SetSourceLatency(TimeSpan.FromMilliseconds(25));
+            var mediaSession = new VoIPMediaSession(audioEndpoint.ToMediaEndpoints());
+
+            await callUA.InitiateCallAsync(cd, mediaSession, _cfg.RingTimeoutSeconds);
+
+            var newCall = new OutgoingCall(callUA, new CallPartyDescriptor(string.Empty, dstUri), audioEndpoint);
+
+            _activeCalls.Add(newCall);
+
+            return newCall;
         }
 
         public void Start()

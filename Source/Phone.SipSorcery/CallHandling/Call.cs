@@ -36,9 +36,20 @@ namespace Phone.SipSorcery.CallHandling
                 try
                 {
                     _endpointMutex.WaitOne();
+                    if (_audio != null)
+                    {
+                        // remove event registrations
+                    }
+
                     _audio = value;
-                    _audio.Source = _audioSource;
-                    _audio.Sink = _audioSink;
+
+                    if (_audio != null)
+                    {
+                        _audio.Source = _audioSource;
+                        _audio.Sink = _audioSink;
+
+                        // add event registrations
+                    }
                 }
                 finally
                 {
@@ -100,19 +111,25 @@ namespace Phone.SipSorcery.CallHandling
         {
             get => _state;
             protected set {
-                _state = value;
-                OnStateChanged?.Invoke(this, value);
+                if (_state != value)
+                {
+                    _state = value;
+                    OnStateChanged?.Invoke(this, value);
+                }
             }
         }
 
         public CallDirection Direction { get; }
 
-        internal Call(SIPUserAgent ua, CallDirection direction)
+        public CallPartyDescriptor CallParty { get; }
+
+        internal Call(SIPUserAgent ua, CallDirection direction, CallPartyDescriptor callParty)
         {
             _ua = ua;
             Direction = direction;
 
             _ua.OnCallHungup += _ua_OnCallHungup;
+            CallParty = callParty;
         }
 
         private void _ua_OnCallHungup(SIPSorcery.SIP.SIPDialogue obj)

@@ -13,11 +13,12 @@ namespace Phone.SipSorcery.CallHandling
     {
         private SIPServerUserAgent _serverAgent;
 
-        internal IncomingCall(SIPUserAgent ua, SIPServerUserAgent sua) 
-            : base(ua, CallDirection.In)
+        internal IncomingCall(SIPUserAgent ua, SIPServerUserAgent sua)
+            : base(ua, CallDirection.In,
+                new CallPartyDescriptor(sua.CallRequest.Header.From.FromName, sua.CallRequest.Header.From.FromURI))
         {
             _serverAgent = sua;
-
+            
             ua.ServerCallCancelled += UaOnServerCallCancelled;
             ua.ServerCallRingTimeout += UaOnServerCallRingTimeout;
             State = CallState.Ringing;
@@ -36,6 +37,7 @@ namespace Phone.SipSorcery.CallHandling
         public async Task Answer()
         {
             Audio = new AudioBrixEndpoint(new AudioEncoder());
+            Audio.SetSourceLatency(TimeSpan.FromMilliseconds(25));
             await UserAgent.Answer(_serverAgent, new VoIPMediaSession(Audio.ToMediaEndpoints()));
             State = CallState.Established;
         }
