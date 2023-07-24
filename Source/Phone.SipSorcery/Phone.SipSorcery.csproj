@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AudioBrix" Version="1.0.1" />
-    <PackageReference Include="AudioBrix.SipSorcery" Version="1.0.0" />
+    <PackageReference Include="AudioBrix.SipSorcery" Version="1.0.1" />
     <PackageReference Include="SIPSorcery" Version="6.0.12" />
   </ItemGroup>
 

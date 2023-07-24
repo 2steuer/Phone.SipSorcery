@@ -50,6 +50,10 @@ var fs = mono.ToFrameSource();
 
 myCall.AudioSource = fs;
 
+myCall.AudioStart += (sender, eventArgs) => Console.WriteLine("Audio Start");
+myCall.AudioStop += (sender, eventArgs) => Console.WriteLine("Audio Stop");
+myCall.AudioSourceFormatChanged += (sender, eventArgs) => Console.WriteLine($"Source Format: {eventArgs.NewFormat}");
+
 signal.WaitOne();
 Thread.Sleep(2500);
 await Task.Delay(5000);
