@@ -116,6 +116,11 @@ namespace Phone.SipSorcery
                 dstUri = new SIPURI(destination, _cfg.Server, string.Empty);
             }
 
+            if (string.IsNullOrEmpty(dstUri.Host))
+            {
+                dstUri.Host = _cfg.Server;
+            }
+
             string from = SIPConstants.SIP_DEFAULT_FROMURI;
 
             if (!string.IsNullOrEmpty(_cfg.Username))
