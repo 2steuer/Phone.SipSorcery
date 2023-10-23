@@ -18,11 +18,11 @@ Console.WriteLine("Hello, World!");
 
 var cfg = new PhoneConfig()
 {
-    Username = "testfon1",
-    Password = "testfon1pw",
+    Username = "",
+    Password = "",
     Protocol = SIPProtocolsEnum.udp,
     Register = true,
-    Server = "fritz.box",
+    Server = "sip.easybell.de",
     RingTimeoutSeconds = 10
 };
 
@@ -42,16 +42,16 @@ var fs = mono.ToFrameSource();
 var dha = PortAudioHelper.GetDefaultHostApi();
 var dod = PortAudioHelper.GetDefaultOutputDevice(dha);
 
-var os = new PortAudioOutput(dha, dod.index, 8000, 1, 0.05);
+var os = new PortAudioOutput(dha, dod.index, 8000, 1, 0.1);
 var obuf = new AudioBuffer(new AudioFormat(8000, 1), 8000);
 
-obuf.FillWithZero = true;
+obuf.FillWithZero = false;
 obuf.WaitOnEmpty = false;
 
 os.Source = obuf;
 
 
-var myCall = await phone.Call("**1@fritz.box");
+var myCall = await phone.Call("FILL IN");
 
 myCall.OnStateChanged += (call, state) =>
 {

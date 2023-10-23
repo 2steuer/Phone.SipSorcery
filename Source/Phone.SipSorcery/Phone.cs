@@ -1,10 +1,12 @@
 ﻿using System.Net.Sockets;
 using AudioBrix.SipSorcery;
+using Phone.SipSorcery.AudioEncoders;
 using Phone.SipSorcery.CallHandling;
 using SIPSorcery.Media;
 using SIPSorcery.Net;
 using SIPSorcery.SIP;
 using SIPSorcery.SIP.App;
+using SIPSorceryMedia.Abstractions;
 
 namespace Phone.SipSorcery
 {
@@ -141,8 +143,11 @@ namespace Phone.SipSorcery
                 null
             );
 
-            var audioEndpoint = new AudioBrixEndpoint(new AudioEncoder());
-            audioEndpoint.SetSourceLatency(TimeSpan.FromMilliseconds(25));
+            var ae = new PhoneAudioEncoder();
+            
+            var audioEndpoint = new AudioBrixEndpoint(ae);
+            audioEndpoint.SetSourceLatency(TimeSpan.FromMilliseconds(50));
+            
             var mediaSession = new VoIPMediaSession(audioEndpoint.ToMediaEndpoints());
 
             await callUA.InitiateCallAsync(cd, mediaSession, _cfg.RingTimeoutSeconds);

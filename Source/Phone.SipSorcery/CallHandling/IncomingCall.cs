@@ -37,7 +37,7 @@ namespace Phone.SipSorcery.CallHandling
         public async Task Answer()
         {
             Audio = new AudioBrixEndpoint(new AudioEncoder());
-            Audio.SetSourceLatency(TimeSpan.FromMilliseconds(25));
+            Audio.SetSourceLatency(TimeSpan.FromMilliseconds(50));
             await UserAgent.Answer(_serverAgent, new VoIPMediaSession(Audio.ToMediaEndpoints()));
             State = CallState.Established;
         }
