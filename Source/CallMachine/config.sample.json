@@ -1,0 +1,14 @@
+{
+	"Sip": {
+		"Register": true,
+		"Server": "",
+		"Username": "",
+		"Password": "",
+		"RingTimeoutSeconds": 10
+	},
+	"AlarmFile": "alarm.wav",
+	"Targets": [
+		"",
+		""
+	]
+}

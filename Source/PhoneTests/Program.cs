@@ -35,7 +35,9 @@ ManualResetEvent signal = new ManualResetEvent(false);
 phone.Start();
 
 var wfr = new WaveFileReader(@"K:\tmp\01 Hung Up.wav");
+
 var rs = new WdlResamplingSampleProvider(wfr.ToSampleProvider(), 8000);
+
 var mono = new StereoToMonoSampleProvider(rs);
 var fs = mono.ToFrameSource();
 

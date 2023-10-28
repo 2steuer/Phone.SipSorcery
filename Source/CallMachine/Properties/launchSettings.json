@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CallMachine": {
+      "commandName": "Project",
+      "commandLineArgs": "config.dev.json"
+    }
+  }
+}

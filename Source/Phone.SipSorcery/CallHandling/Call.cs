@@ -157,13 +157,25 @@ namespace Phone.SipSorcery.CallHandling
 
         private void _ua_OnCallHungup(SIPSorcery.SIP.SIPDialogue obj)
         {
-            State = CallState.Ended;
+            State = State switch
+            {
+                CallState.Ringing => CallState.Failed,
+                CallState.Established => CallState.Ended,
+                _ => CallState.Failed,
+            };
         }
 
         public void Hangup()
         {
-            _ua.Hangup();
-            State = CallState.Ended;
+            if (State == CallState.Ringing)
+            {
+                _ua.Cancel();
+            }
+            else
+            {
+                _ua.Hangup();
+                State = CallState.Ended;
+            }
         }
         
         public virtual void Dispose()
