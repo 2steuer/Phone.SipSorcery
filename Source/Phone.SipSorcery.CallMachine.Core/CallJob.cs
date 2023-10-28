@@ -11,5 +11,7 @@ namespace Phone.SipSorcery.CallMachine.Core
         public string Uri { get; set; } = string.Empty;
 
         public string WaveFile { get; set; } = string.Empty;
+
+        public int TriesLeft { get; set; }
     }
 }

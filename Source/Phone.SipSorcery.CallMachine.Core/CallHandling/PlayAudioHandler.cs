@@ -99,8 +99,9 @@ namespace Phone.SipSorcery.CallMachine.Core.CallHandling
                     }
 
                     var resample = new WdlResamplingSampleProvider(sprov.ToSampleProvider(), (int)_format.SampleRate);
-                    
-                    _call.AudioSource = resample.ToFrameSource();
+                    var notifySource = new NotifyEndFrameSource(resample.ToFrameSource());
+                    notifySource.FrameSourceEnded += NotifySource_FrameSourceEnded;
+                    _call.AudioSource = notifySource;
                     State = CallHandlerState.Active;
                     break;
                 }
@@ -121,6 +122,11 @@ namespace Phone.SipSorcery.CallMachine.Core.CallHandling
                     _tcs.SetResult(false);
                     break;
             }
+        }
+
+        private void NotifySource_FrameSourceEnded(object obj)
+        {
+            _call.Hangup();
         }
     }
 }

@@ -5,6 +5,14 @@ namespace Phone.SipSorcery.CallMachine.Core
 {
     public class CallMachine
     {
+        private int _triesPerCall;
+
+        public int TriesPerCall
+        {
+            get => _triesPerCall; 
+            set => _triesPerCall = value;
+        }
+
         private Phone _phone;
 
         private ConcurrentQueue<CallJob> _jobs = new();
@@ -16,9 +24,10 @@ namespace Phone.SipSorcery.CallMachine.Core
         private CancellationTokenSource? _workerCancelSource = null;
         private CancellationTokenSource? _currentCallCancel = null;
 
-        public CallMachine(PhoneConfig cfg)
+        public CallMachine(PhoneConfig cfg, int triesPerCall)
         {
             _phone = new Phone(cfg);
+            _triesPerCall = triesPerCall;
         }
 
         public void Start()
@@ -79,18 +88,29 @@ namespace Phone.SipSorcery.CallMachine.Core
 
                 if (!result)
                 {
-                    AddJob(currentJob.Uri, currentJob.WaveFile);
+                    currentJob.TriesLeft--;
+
+                    if (currentJob.TriesLeft > 0)
+                    {
+                        AddJob(currentJob);
+                    }
                 }
             }
         }
 
         public void AddJob(string uri, string waveFile)
         {
-            _jobs.Enqueue(new CallJob()
+            AddJob(new CallJob()
             {
                 Uri = uri,
                 WaveFile = waveFile,
+                TriesLeft = _triesPerCall
             });
+        }
+
+        private void AddJob(CallJob job)
+        {
+            _jobs.Enqueue(job);
             _semaphore.Release();
         }
 

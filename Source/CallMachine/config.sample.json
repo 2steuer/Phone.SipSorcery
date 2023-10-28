@@ -6,6 +6,7 @@
 		"Password": "",
 		"RingTimeoutSeconds": 10
 	},
+	"CallRetries": 3,
 	"AlarmFile": "alarm.wav",
 	"Targets": [
 		"",
