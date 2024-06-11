@@ -7,7 +7,7 @@ namespace Phone.SipSorcery.CallMachine.Core
 {
     public class CallMachine
     {
-        private ILogger _log = LogManager.GetCurrentClassLogger();
+        private NLog.ILogger _log = LogManager.GetCurrentClassLogger();
 
         private int _triesPerCall;
 
