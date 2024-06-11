@@ -11,5 +11,25 @@
 	"Targets": [
 		"",
 		""
-	]
+	],
+	"Mqtt": {
+		"Host": "localhost",
+		"Port": 1883,
+		"Authenticate": false,
+		"User": "",
+		"Password": "",
+		"ClientId": "CallMachine-Dev",
+		"State": {
+			"Topic": "callmachine/state",
+			"OnPayload": "Online",
+			"OffPayload": "Offline"
+		},
+		"ListenTopic": "alarm/state",
+		"StartPayloads": [
+			"Alarm"
+		],
+		"StopPayloads": [
+			"Off"
+		]
+	}
 }

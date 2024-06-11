@@ -16,8 +16,25 @@ string soundFile = cfg.GetValue<string>("AlarmFile") ?? throw new ArgumentExcept
 List<string> targets = cfg.GetRequiredSection("Targets").Get<List<string>>() ?? throw new ArgumentException("Targets list invalid in configuration");
 int retries = cfg.GetValue<int>("CallRetries");
 
+MqttHandler mqtt = new MqttHandler(cfg.GetRequiredSection("Mqtt"));
+
 CallMachine cm = new CallMachine(pcfg, retries);
 
+mqtt.StopSignalReceived += () => {
+    log.Info("Received STOP signal, stopping queue processing!");
+    cm.CancelQueue();
+};
+
+mqtt.StartSignalReceived += () => {
+    log.Info("Received START signal, adding jobs to queue...");
+    foreach (var entry in targets)
+    {
+        log.Info($"Adding {entry}.");
+        cm.AddJob(entry, soundFile);
+    }
+};
+
+await mqtt.Start();
 cm.Start();
 
 log.Info("System running");
@@ -51,4 +68,5 @@ await cancelSource.Task;
 
 log.Info("System shutting down");
 
+await mqtt.Stop();
 cm.Stop();
