@@ -10,6 +10,7 @@
     <PackageReference Include="AudioBrix" Version="1.0.1" />
     <PackageReference Include="AudioBrix.SipSorcery" Version="1.0.1" />
     <PackageReference Include="SIPSorcery" Version="6.0.12" />
+    <PackageReference Include="NLog" Version="5.2.5" />
   </ItemGroup>
 
 </Project>

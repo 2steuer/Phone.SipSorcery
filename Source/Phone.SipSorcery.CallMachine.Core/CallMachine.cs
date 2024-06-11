@@ -1,10 +1,14 @@
 ﻿using System.Collections.Concurrent;
+using DnsClient.Internal;
+using NLog;
 using Phone.SipSorcery.CallMachine.Core.CallHandling;
 
 namespace Phone.SipSorcery.CallMachine.Core
 {
     public class CallMachine
     {
+        private ILogger _log = LogManager.GetCurrentClassLogger();
+
         private int _triesPerCall;
 
         public int TriesPerCall
@@ -36,6 +40,7 @@ namespace Phone.SipSorcery.CallMachine.Core
             {
                 throw new InvalidOperationException("Cannot start twice");
             }
+            _log.Info("Starting call machine!");
 
             _running = true;
             _workerCancelSource = new CancellationTokenSource();
@@ -53,6 +58,7 @@ namespace Phone.SipSorcery.CallMachine.Core
                 throw new InvalidOperationException("Not running");
             }
 
+            _log.Info("Stopping call machine!");
             _workerCancelSource!.Cancel();
             _worker!.Join();
             _phone.Stop();
@@ -74,6 +80,8 @@ namespace Phone.SipSorcery.CallMachine.Core
                     goto Dequeue;
                 }
 
+                _log.Info($"Calling {currentJob.Uri}...");
+
                 var call =  await _phone.Call(currentJob.Uri);
                 var hdlr = new PlayAudioHandler(call, currentJob.WaveFile);
 
@@ -84,11 +92,15 @@ namespace Phone.SipSorcery.CallMachine.Core
 
                 var result = await hdlr.WaitForResult(internalCts.Token);
 
+                _log.Info($"Call to {currentJob.Uri} finished: {(result ? "Successful" : "Failed")}");
+
                 _currentCallCancel = null;
 
                 if (!result)
                 {
                     currentJob.TriesLeft--;
+                    
+                    _log.Debug($"Call to {currentJob.Uri} has {currentJob.TriesLeft} tries left");
 
                     if (currentJob.TriesLeft > 0)
                     {
@@ -116,7 +128,7 @@ namespace Phone.SipSorcery.CallMachine.Core
 
         public void CancelQueue()
         {
-            while (_jobs.Count > 0)
+            while (_jobs.Count > 0 && _semaphore.CurrentCount > 0)
             {
                 _semaphore.Wait();
 
