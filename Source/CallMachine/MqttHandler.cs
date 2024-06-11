@@ -2,9 +2,12 @@ using Microsoft.Extensions.Configuration;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
+using NLog;
 
 internal class MqttHandler
 {
+    private NLog.ILogger _log = LogManager.GetCurrentClassLogger();
+
     public event Action StartSignalReceived;
 
     public event Action StopSignalReceived;
@@ -60,15 +63,41 @@ internal class MqttHandler
         }
 
         _client = new MqttFactory().CreateManagedMqttClient();
-        await _client.StartAsync(_clientOptions);
 
-        await _client.EnqueueAsync(new MqttApplicationMessageBuilder()
-            .WithTopic(_stateTopic)
-            .WithPayload(_onlineStatePayload)
-            .Build());
 
         await _client.SubscribeAsync(_listenTopic);
         _client.ApplicationMessageReceivedAsync += MessageHandler;
+        _client.ConnectionStateChangedAsync += ConnectionStateHandler;
+        _client.ConnectingFailedAsync += ConnectFailedHandler;
+        _client.ConnectedAsync += ConnectedHandler;
+
+        await _client.StartAsync(_clientOptions);
+
+        
+
+
+    }
+
+    private async Task ConnectedHandler(MqttClientConnectedEventArgs args)
+    {
+        _log.Debug($"MQTT Client successfully connected.");
+
+        await _client!.EnqueueAsync(new MqttApplicationMessageBuilder()
+            .WithTopic(_stateTopic)
+            .WithPayload(_onlineStatePayload)
+            .Build());
+    }
+
+    private Task ConnectFailedHandler(ConnectingFailedEventArgs args)
+    {
+        _log.Warn($"MQTT Connection Failed. {args.ConnectResult}{args.Exception.GetType()}: {args.Exception.Message}");
+        return Task.CompletedTask;
+    }
+
+    private Task ConnectionStateHandler(EventArgs args)
+    {
+        _log.Info($"MQTT Connection State Changed: {(_client.IsConnected ? "Connected" : "Disconnected")}");
+        return Task.CompletedTask;
     }
 
     private async Task MessageHandler(MqttApplicationMessageReceivedEventArgs e)
@@ -76,6 +105,8 @@ internal class MqttHandler
         await e.AcknowledgeAsync(CancellationToken.None);
 
         var str = e.ApplicationMessage.ConvertPayloadToString();
+
+        _log.Debug($"Received MQTT Message on {e.ApplicationMessage.Topic}: {str}");
 
         if (_startPayloads.Contains(str))
         {
