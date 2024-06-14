@@ -8,11 +8,14 @@ using AudioBrix.Material;
 using AudioBrix.NAudio;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using NLog;
 
 namespace Phone.SipSorcery.CallMachine.Core.CallHandling
 {
     internal class PlayAudioHandler
     {
+        private static ILogger _log = LogManager.GetCurrentClassLogger();
+
         public Action<object, CallHandlerState>? StateChanged;
 
         private CallHandlerState _state = CallHandlerState.Waiting;
@@ -25,6 +28,7 @@ namespace Phone.SipSorcery.CallMachine.Core.CallHandling
                 if (_state != value)
                 {
                     _state = value;
+                    _log.Trace($"Audio handler state: {value}");
                     StateChanged?.Invoke(this, value);
                 }
             }
