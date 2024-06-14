@@ -1,0 +1,18 @@
+FROM bitnami/dotnet-sdk:8 AS build-env
+WORKDIR /build
+
+COPY ./ ./
+COPY NuGet-Packages/ /nuget-local
+COPY Dockerfiles/NuGet.Config /build/Source/NuGet.Config
+
+WORKDIR /build/Source
+
+RUN dotnet restore
+RUN dotnet publish -o out CallMachine/CallMachine.csproj
+
+FROM bitnami/dotnet:8
+WORKDIR /app
+COPY --from=build-env /build/Source/out .
+RUN mkdir /config
+
+CMD ["dotnet", "CallMachine.dll", "/config/config.json"]
