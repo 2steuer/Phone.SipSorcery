@@ -30,6 +30,11 @@ internal class MqttHandler
         _startPayloads = cfg.GetRequiredSection("StartPayloads").Get<List<string>>() ?? throw new ArgumentException("No start payloads given.");
         _stopPayloads = cfg.GetRequiredSection("StopPayloads").Get<List<string>>() ?? throw new ArgumentException("No stop payloads given.");
         
+        _stateTopic = stateCfg.GetValue<string>("Topic") ?? throw new ArgumentException("State Topic not given");
+        _onlineStatePayload = stateCfg.GetValue<string>("OnPayload") ?? throw new ArgumentException("Online Payload not given");
+        _offlineStatePayload = stateCfg.GetValue<string>("OffPayload") ?? throw new ArgumentException("No offline state payload given.");
+
+
 
         ManagedMqttClientOptionsBuilder optb = new ManagedMqttClientOptionsBuilder();
         optb.WithClientOptions(co => {
@@ -39,11 +44,6 @@ internal class MqttHandler
             {
                 co.WithCredentials(cfg.GetValue<string>("User"), cfg.GetValue<string>("Password"));
             }
-
-
-            _stateTopic = stateCfg.GetValue<string>("Topic") ?? throw new ArgumentException("State Topic not given");
-            _onlineStatePayload = stateCfg.GetValue<string>("OnPayload") ?? throw new ArgumentException("Online Payload not given");
-            _offlineStatePayload = stateCfg.GetValue<string>("OffPayload") ?? throw new ArgumentException("No offline state payload given.");
 
             co.WithWillTopic(_stateTopic);
             co.WithWillRetain(true);
@@ -84,6 +84,7 @@ internal class MqttHandler
 
         await _client!.EnqueueAsync(new MqttApplicationMessageBuilder()
             .WithTopic(_stateTopic)
+            .WithRetainFlag(true)
             .WithPayload(_onlineStatePayload)
             .Build());
     }
